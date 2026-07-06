@@ -262,6 +262,7 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
 
       if (!available()) {
         yield();
+        ESP_LOGD(TAG, "!available", b);
         continue;
       }
 
