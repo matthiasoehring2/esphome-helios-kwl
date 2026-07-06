@@ -187,6 +187,12 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
   ReadGuard guard(read_in_progress_);
   for (int attempt = 0; attempt < 3; attempt++) {
 
+    
+    ESP_LOGD(TAG,
+             "READ reg=%02X attempt=%d",
+             reg,
+             attempt + 1);
+
     // Bus frei?
     wait_bus_silence();
 
@@ -221,10 +227,12 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
 
     write_array(req, 6);
     flush();
+    ESP_LOGD(TAG, "after TX available=%u", available());
 
     ESP_LOGD(TAG, "TX done reg=%02X", reg);
 
-    delay(3);
+    delay(20);
+    ESP_LOGD(TAG, "20ms later available=%u", available());
 
     uint32_t deadline = millis() + 200;
 
