@@ -163,7 +163,13 @@ void HeliosKwlComponent::wait_bus_silence() {
       if (rx_buffer_len_ < RX_BUFFER_SIZE) rx_buffer_[rx_buffer_len_++] = b;
       last_rx_time_ = millis();
     }
-    if ((millis() - last_rx_time_) >= BUS_SILENCE_MS) return;
+    if ((millis() - last_rx_time_) >= BUS_SILENCE_MS) 
+    {
+      ESP_LOGD(TAG,
+               "Bus idle for %u ms -> TX allowed",
+               millis() - last_rx_time_);
+      return;
+    }
     yield();
   }
 }
@@ -207,6 +213,11 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
       uint8_t dummy;
       read_byte(&dummy);
     }
+
+    ESP_LOGD(TAG,
+         "Sending request reg=%02X after %u ms silence",
+         reg,
+         millis() - last_rx_time_);
 
     write_array(req, 6);
     flush();
