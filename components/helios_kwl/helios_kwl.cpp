@@ -241,7 +241,7 @@ HeliosKwlComponent::read_register(uint8_t reg)
   
     uint32_t request_time = millis();
     
-    uint32_t deadline = millis() + 200;
+    uint32_t deadline = millis() + 6000;
 
     ESP_LOGD(TAG,
              "EXPECT reg=%02X",
