@@ -237,7 +237,7 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
 
     ESP_LOGD(TAG, "TX done reg=%02X", reg);
 
-    delay(20);
+    delay(1);
     
     ESP_LOGD(TAG, "20ms later available=%u", available());
 
