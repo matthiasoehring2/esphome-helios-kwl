@@ -265,8 +265,8 @@ HeliosKwlComponent::read_register(uint8_t reg)
             if (frame.src != HELIOS_MAINBOARD)
                 continue;
 
-            if (frame.dst != address_)
-                continue;
+            //if (frame.dst != address_)
+            //    continue;
 
             if (frame.reg != reg)
                 continue;
