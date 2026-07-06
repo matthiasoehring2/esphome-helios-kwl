@@ -55,7 +55,7 @@ static constexpr uint32_t POLL_INTERVAL_S2 = 6000;
 static constexpr uint32_t POLL_INTERVAL_S3 = 3600000;
 static constexpr uint8_t  S2_TURNS_BEFORE_S3 = 5;
 //static constexpr uint32_t BUS_SILENCE_MS = 10;
-static constexpr uint32_t BUS_SILENCE_MS = 50;
+static constexpr uint32_t BUS_SILENCE_MS = 200;
 
 struct PollTask { uint8_t reg; uint32_t interval_ms; uint32_t last_polled; };
 
