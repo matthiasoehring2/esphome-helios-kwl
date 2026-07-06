@@ -170,22 +170,7 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
   // Protocole section 3.1 : max 3 tentatives si pas de reponse
   for (int attempt = 0; attempt < 3; attempt++) {
     wait_bus_silence();
-    while (available()) { 
-      uint8_t b; 
-      read_byte(&b); 
-      //Add sync to begin of frame
-      if (b != 0x01)
-          continue;
-  
-      uint8_t frame[6];
-      frame[0] = b;
-  
-      for (int i = 1; i < 6; i++) {
-          if (!read_byte(&frame[i]))
-              return false;
-      }
-    
-    }
+    while (available()) { uint8_t b; read_byte(&b); }
     rx_buffer_len_ = 0;
     uint8_t req[6] = {HELIOS_START_BYTE, address_, HELIOS_MAINBOARD, 0x00, reg, 0};
     req[5] = checksum(req, 5);
