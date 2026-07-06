@@ -176,6 +176,7 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
     req[5] = checksum(req, 5);
     write_array(req, 6);
     flush();
+    delay(2);
     uint8_t buf[6]; size_t got = 0;
     uint32_t deadline = millis() + 50;
     while (got < 6 && millis() < deadline) {
