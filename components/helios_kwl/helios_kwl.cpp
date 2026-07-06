@@ -219,6 +219,12 @@ void HeliosKwlComponent::send_read_request(uint8_t reg)
     };
 
     req[5] = checksum(req, 5);
+    
+    ESP_LOGD(TAG,
+             "SEND src=%02X dst=%02X reg=%02X",
+             address_,
+             HELIOS_MAINBOARD,
+             reg);
 
     write_array(req, 6);
     flush();
@@ -236,6 +242,10 @@ HeliosKwlComponent::read_register(uint8_t reg)
     uint32_t request_time = millis();
     
     uint32_t deadline = millis() + 200;
+
+    ESP_LOGD(TAG,
+             "EXPECT reg=%02X",
+             reg);
 
     while (millis() < deadline)
     {
@@ -259,8 +269,8 @@ HeliosKwlComponent::read_register(uint8_t reg)
                      frame.value);
 
           
-            if (frame.timestamp < request_time)
-                continue;
+            //if (frame.timestamp < request_time)
+            //    continue;
 
             if (frame.src != HELIOS_MAINBOARD)
                 continue;
@@ -269,8 +279,13 @@ HeliosKwlComponent::read_register(uint8_t reg)
             //    continue;
 
             if (frame.reg != reg)
+            {
+                ESP_LOGD(TAG,
+                         "SKIP reg=%02X wanted=%02X",
+                         frame.reg,
+                         reg);
                 continue;
-
+            }
             
             ESP_LOGD(TAG,
                      "MATCH src=%02X dst=%02X reg=%02X val=%02X",
@@ -289,7 +304,7 @@ HeliosKwlComponent::read_register(uint8_t reg)
     }
 
     ESP_LOGW(TAG,
-             "read_register 0x%02X timeout",
+             "TIMEOUT waiting reg=%02X",
              reg);
 
     return {};
