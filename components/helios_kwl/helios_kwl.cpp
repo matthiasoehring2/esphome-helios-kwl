@@ -198,7 +198,7 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
 
     delay(3);
 
-    uint32_t deadline = millis() + 80;
+    uint32_t deadline = millis() + 200;
 
     while (millis() < deadline) {
 
@@ -215,7 +215,11 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
       if (b != HELIOS_START_BYTE)
         continue;
 
-      ESP_LOGD(TAG, "Found SOF");
+      
+      ESP_LOGD(TAG,
+         "Found SOF first=%02X",
+         buf[0]);
+
 
       uint8_t buf[6];
       buf[0] = b;
@@ -224,13 +228,23 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
 
       // Rest des Frames lesen
       for (int i = 1; i < 6; i++) {
-        uint32_t byte_deadline = millis() + 10;
+        uint32_t byte_deadline = millis() + 30;
 
         while (!available() && millis() < byte_deadline)
           yield();
 
         if (!available()) {
-          ESP_LOGD(TAG, "Frame timeout byte=%d", i);
+          
+          ESP_LOGD(TAG,
+           "Frame timeout byte=%d partial=%02X %02X %02X %02X %02X %02X",
+           i,
+           buf[0],
+           i > 1 ? buf[1] : 0,
+           i > 2 ? buf[2] : 0,
+           i > 3 ? buf[3] : 0,
+           i > 4 ? buf[4] : 0,
+           i > 5 ? buf[5] : 0);
+
           complete = false;
           break;
         }
