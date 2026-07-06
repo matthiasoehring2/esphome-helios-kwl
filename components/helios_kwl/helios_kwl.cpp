@@ -224,10 +224,23 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
     write_array(req, 6);
     flush();
     
-    delay(5);
     
-    write_array(req, 6);
-    flush();
+    ESP_LOGD(TAG, "RAW START");
+    
+    uint32_t deadline = millis() + 50;
+    
+    while (millis() < deadline) {
+      while (available()) {
+        uint8_t b;
+        read_byte(&b);
+    
+        ESP_LOGD(TAG, "RAW %02X", b);
+      }
+      yield();
+    }
+    
+    return {};
+
 
     delay(1);
     ESP_LOGD(TAG, "after flush wiht 1ms delay available=%u", available());
