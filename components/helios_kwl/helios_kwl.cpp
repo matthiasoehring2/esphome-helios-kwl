@@ -216,13 +216,14 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
         continue;
 
       
+
+      uint8_t buf[6];
+      buf[0] = b;
+      
       ESP_LOGD(TAG,
          "Found SOF first=%02X",
          buf[0]);
 
-
-      uint8_t buf[6];
-      buf[0] = b;
 
       bool complete = true;
 
