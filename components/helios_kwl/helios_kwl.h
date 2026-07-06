@@ -173,7 +173,6 @@ class HeliosKwlComponent : public uart::UARTDevice, public PollingComponent {
   size_t frame_tail_ = 0;
 
  protected:
-  bool read_in_progress_{false};
   uint8_t address_{HELIOS_ADDR_DEFAULT};
   std::array<uint8_t, RX_BUFFER_SIZE> rx_buffer_{};
   size_t rx_buffer_len_{0};
@@ -238,6 +237,8 @@ class HeliosKwlComponent : public uart::UARTDevice, public PollingComponent {
   void publish_program_vars(uint8_t value);
   void publish_co2(uint8_t h, uint8_t l);
   void update_health_indicator();
+  void push_frame(const HeliosFrame &f);
+  void send_read_request(uint8_t reg);
 
   static uint8_t checksum(const uint8_t *d, size_t l);
   static bool verify_checksum(const uint8_t *d, size_t l);
