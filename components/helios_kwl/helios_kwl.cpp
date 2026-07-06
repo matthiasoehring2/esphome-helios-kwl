@@ -222,36 +222,9 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
 
     write_array(req, 6);
     flush();
-    ESP_LOGD(TAG, "after flush available=%u", available());
-
-    
     delay(1);
-    ESP_LOGD(TAG, "after 1ms available=%u", available());
-    
-    delay(1);
-    ESP_LOGD(TAG, "after 2ms available=%u", available());
-    
-    delay(1);
-    ESP_LOGD(TAG, "after 3ms available=%u", available());
-
-    /*
-    int n = available();
-    
-    ESP_LOGD(TAG, "RAW COUNT=%d", n);
-    
-    for (int i = 0; i < n; i++) {
-        uint8_t b;
-        read_byte(&b);
-        ESP_LOGD(TAG, "RAW[%d]=%02X", i, b);
-    }
-    return {};
-    */
-
+    ESP_LOGD(TAG, "after flush wiht 1ms delay available=%u", available());
     ESP_LOGD(TAG, "TX done reg=%02X", reg);
-
-    delay(1);
-    
-    ESP_LOGD(TAG, "20ms later available=%u", available());
 
     uint32_t deadline = millis() + 200;
 
@@ -262,31 +235,18 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
 
       if (!available()) {
         yield();
-        ESP_LOGD(TAG, "!available", b);
         continue;
       }
-
       read_byte(&b);
-
       
-
       if (b != HELIOS_START_BYTE) {
         ESP_LOGD(TAG, "SYNC DROP %02X", b);
         continue;
-      }
-      
+      } 
       ESP_LOGD(TAG, "FOUND SOF %02X", b);
-
-
-      
 
       uint8_t buf[6];
       buf[0] = b;
-      
-      ESP_LOGD(TAG,
-         "Found SOF first=%02X",
-         buf[0]);
-
 
       bool complete = true;
 
@@ -297,8 +257,7 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
         while (!available() && millis() < byte_deadline)
           yield();
 
-        if (!available()) {
-          
+        if (!available()) {          
           ESP_LOGD(TAG,
            "Frame timeout byte=%d partial=%02X %02X %02X %02X %02X %02X",
            i,
@@ -336,9 +295,7 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
       ESP_LOGD(TAG,
          "FRAME src=%02X dst=%02X reg=%02X val=%02X",
          buf[1], buf[2], buf[3], buf[4]);
-
       
-
       // Nur Antworten vom Mainboard
 
       if (buf[1] != HELIOS_MAINBOARD) {
