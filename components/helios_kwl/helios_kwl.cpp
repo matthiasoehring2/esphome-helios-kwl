@@ -177,6 +177,7 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
       if (b != 0x01)
           continue;
   
+      uint8_t frame[6];
       frame[0] = b;
   
       for (int i = 1; i < 6; i++) {
