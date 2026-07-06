@@ -282,6 +282,9 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
         yield();
         continue;
       }
+      
+      ESP_LOGD(TAG, "UART avail=%u", available());
+
       read_byte(&b);
       
       if (b != HELIOS_START_BYTE) {
@@ -289,6 +292,7 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
         continue;
       } 
       ESP_LOGD(TAG, "FOUND SOF %02X", b);
+      ESP_LOGD(TAG, "SOF detected, avail=%u", available());
 
       uint8_t buf[6];
       buf[0] = b;
