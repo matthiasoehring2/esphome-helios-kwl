@@ -158,6 +158,20 @@ class HeliosKwlComponent : public uart::UARTDevice, public PollingComponent {
   static uint16_t bytes_to_co2(uint8_t h, uint8_t l);
   static std::pair<uint8_t,uint8_t> co2_to_bytes(uint16_t p);
 
+
+
+  struct HeliosFrame {
+    uint8_t src;
+    uint8_t dst;
+    uint8_t reg;
+    uint8_t value;
+    uint32_t timestamp;
+  };
+  
+  std::array<HeliosFrame, 32> frame_queue_;
+  size_t frame_head_ = 0;
+  size_t frame_tail_ = 0;
+
  protected:
   bool read_in_progress_{false};
   uint8_t address_{HELIOS_ADDR_DEFAULT};
