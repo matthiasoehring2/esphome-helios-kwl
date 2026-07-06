@@ -158,6 +158,7 @@ class HeliosKwlComponent : public uart::UARTDevice, public PollingComponent {
   static std::pair<uint8_t,uint8_t> co2_to_bytes(uint16_t p);
 
  protected:
+  bool read_in_progress_{false};
   uint8_t address_{HELIOS_ADDR_DEFAULT};
   std::array<uint8_t, RX_BUFFER_SIZE> rx_buffer_{};
   size_t rx_buffer_len_{0};
