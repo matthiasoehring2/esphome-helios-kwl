@@ -95,6 +95,10 @@ void HeliosKwlComponent::setup() {
 // ══ loop + dispatch ═══════════════════════════════════════════════
 
 void HeliosKwlComponent::loop() {
+  
+  if (read_in_progress_)
+    return;
+
   loop_read_bus();
 }
 
@@ -142,7 +146,7 @@ void HeliosKwlComponent::dispatch_packet(uint8_t src, uint8_t dst, uint8_t reg, 
   // Publie UNIQUEMENT si c'est une vraie valeur de registre :
   // - dst 0x20 : broadcast CM vers toutes telecommandes
   // - dst == address_ : reponse CM a notre poll
-  if (dst != HELIOS_BROADCAST_RC && dst != address_) return;
+  if (dst != HELIOS_BROADCAST_RC && dst != HELIOS_BROADCAST_ALL && dst != address_) return;
   last_value_[reg] = val;
   has_value_[reg] = true;
   publish_register(reg, val);
@@ -168,6 +172,7 @@ void HeliosKwlComponent::wait_bus_silence() {
 
 
 optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
+  read_in_progress_ = true;
   for (int attempt = 0; attempt < 3; attempt++) {
 
     // Bus frei?
@@ -320,7 +325,7 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
   ESP_LOGW(TAG,
            "read_register 0x%02X : pas de reponse apres 3 tentatives",
            reg);
-
+  read_in_progress_ = false;
   return {};
 }
 
