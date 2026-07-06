@@ -240,21 +240,39 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
                buf[3], buf[4], buf[5]);
 
       // Prüfsumme
-      if (!verify_checksum(buf, 6))
+      if (!verify_checksum(buf, 6)) {
+        ESP_LOGD(TAG, "BAD CRC");
         continue;
+      }
+
+      ESP_LOGD(TAG,
+         "FRAME src=%02X dst=%02X reg=%02X val=%02X",
+         buf[1], buf[2], buf[3], buf[4]);
+
+      
 
       // Nur Antworten vom Mainboard
-      if (buf[1] != HELIOS_MAINBOARD)
-        continue;
 
-      // Fremde Adressen ignorieren
-      if (buf[2] != address_)
+      if (buf[1] != HELIOS_MAINBOARD) {
+        ESP_LOGD(TAG, "ignore: src=%02X", buf[1]);
         continue;
+      }
+      // Fremde Adressen ignorieren
+      if (buf[2] != address_) {
+        ESP_LOGD(TAG,
+                 "ignore: wrong dst=%02X expected=%02X",
+                 buf[2], address_);
+        continue;
+      }
 
       // Falsches Register ignorieren
-      if (buf[3] != reg)
+      if (buf[3] != reg) {
+        ESP_LOGD(TAG,
+                 "ignore: wrong reg=%02X expected=%02X",
+                 buf[3], reg);
         continue;
-
+      }
+      
       // Treffer
       last_value_[reg] = buf[4];
       has_value_[reg] = true;
