@@ -220,8 +220,15 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
          reg,
          millis() - last_rx_time_);
 
+
     write_array(req, 6);
     flush();
+    
+    delay(5);
+    
+    write_array(req, 6);
+    flush();
+
     delay(1);
     ESP_LOGD(TAG, "after flush wiht 1ms delay available=%u", available());
     ESP_LOGD(TAG, "TX done reg=%02X", reg);
