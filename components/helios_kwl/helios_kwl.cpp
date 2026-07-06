@@ -171,8 +171,14 @@ void HeliosKwlComponent::wait_bus_silence() {
 // ══ read_register ═════════════════════════════════════════════════
 
 
+struct ReadGuard {
+  bool &flag;
+  ReadGuard(bool &f) : flag(f) { flag = true; }
+  ~ReadGuard() { flag = false; }
+};
+
 optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
-  read_in_progress_ = true;
+  ReadGuard guard(read_in_progress_);
   for (int attempt = 0; attempt < 3; attempt++) {
 
     // Bus frei?
@@ -325,7 +331,6 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
   ESP_LOGW(TAG,
            "read_register 0x%02X : pas de reponse apres 3 tentatives",
            reg);
-  read_in_progress_ = false;
   return {};
 }
 
