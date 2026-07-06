@@ -215,6 +215,8 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
       if (b != HELIOS_START_BYTE)
         continue;
 
+      ESP_LOGD(TAG, "Found SOF");
+
       uint8_t buf[6];
       buf[0] = b;
 
@@ -228,6 +230,7 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
           yield();
 
         if (!available()) {
+          ESP_LOGD(TAG, "Frame timeout byte=%d", i);
           complete = false;
           break;
         }
@@ -235,8 +238,10 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
         read_byte(&buf[i]);
       }
 
-      if (!complete)
+      if (!complete) {
+        ESP_LOGD(TAG, "Incomplete frame");
         continue;
+      } 
 
       ESP_LOGD(TAG,
                "RX %02X %02X %02X %02X %02X %02X",
@@ -280,6 +285,9 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
       // Treffer
       last_value_[reg] = buf[4];
       has_value_[reg] = true;
+
+      ESP_LOGD(TAG, "MATCH reg=%02X value=%02X",
+         buf[3], buf[4]);
 
       return buf[4];
     }
