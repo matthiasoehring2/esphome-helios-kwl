@@ -223,6 +223,11 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
 
     ESP_LOGD(TAG, "PRE SEND avail=%d", available());
     
+    ESP_LOGD(TAG,
+        "TX %02X %02X %02X %02X %02X %02X",
+        req[0], req[1], req[2],
+        req[3], req[4], req[5]);
+
     write_array(req, 6);
     flush();
     
