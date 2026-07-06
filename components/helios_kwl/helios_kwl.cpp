@@ -166,44 +166,113 @@ void HeliosKwlComponent::wait_bus_silence() {
 
 // ══ read_register ═════════════════════════════════════════════════
 
+
 optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
-  // Protocole section 3.1 : max 3 tentatives si pas de reponse
   for (int attempt = 0; attempt < 3; attempt++) {
+
+    // Bus frei?
     wait_bus_silence();
-    while (available()) { uint8_t b; read_byte(&b); }
+
+    // RX-Puffer leeren
+    while (available()) {
+      uint8_t dummy;
+      read_byte(&dummy);
+    }
     rx_buffer_len_ = 0;
-    uint8_t req[6] = {HELIOS_START_BYTE, address_, HELIOS_MAINBOARD, 0x00, reg, 0};
+
+    // Request senden
+    uint8_t req[6] = {
+      HELIOS_START_BYTE,
+      address_,
+      HELIOS_MAINBOARD,
+      0x00,
+      reg,
+      0
+    };
     req[5] = checksum(req, 5);
+
     write_array(req, 6);
     flush();
-    delay(2);
-    uint8_t buf[6]; size_t got = 0;
-    uint32_t deadline = millis() + 50;
-    while (got < 6 && millis() < deadline) {
-      if (available()) { read_byte(&buf[got]); got++; last_rx_time_ = millis(); }
-      else yield();
-    }
-    //debug Co-Pilot
-    ESP_LOGD(TAG, "got=%u", got);
-    
-    if (got == 6) {
+
+    uint32_t deadline = millis() + 80;
+
+    while (millis() < deadline) {
+
+      // Auf Startbyte synchronisieren
+      uint8_t b;
+
+      if (!available()) {
+        yield();
+        continue;
+      }
+
+      read_byte(&b);
+
+      if (b != HELIOS_START_BYTE)
+        continue;
+
+      uint8_t buf[6];
+      buf[0] = b;
+
+      bool complete = true;
+
+      // Rest des Frames lesen
+      for (int i = 1; i < 6; i++) {
+        uint32_t byte_deadline = millis() + 10;
+
+        while (!available() && millis() < byte_deadline)
+          yield();
+
+        if (!available()) {
+          complete = false;
+          break;
+        }
+
+        read_byte(&buf[i]);
+      }
+
+      if (!complete)
+        continue;
+
       ESP_LOGD(TAG,
                "RX %02X %02X %02X %02X %02X %02X",
                buf[0], buf[1], buf[2],
                buf[3], buf[4], buf[5]);
-    }
-    //debug Co-Pilot End
-    if (got == 6 && verify_checksum(buf, 6) && buf[1] == HELIOS_MAINBOARD && buf[2] == address_ && buf[3] == reg) {
+
+      // Prüfsumme
+      if (!verify_checksum(buf, 6))
+        continue;
+
+      // Nur Antworten vom Mainboard
+      if (buf[1] != HELIOS_MAINBOARD)
+        continue;
+
+      // Fremde Adressen ignorieren
+      if (buf[2] != address_)
+        continue;
+
+      // Falsches Register ignorieren
+      if (buf[3] != reg)
+        continue;
+
+      // Treffer
       last_value_[reg] = buf[4];
       has_value_[reg] = true;
+
       return buf[4];
     }
-    if (attempt < 2) delay(5);
+
+    if (attempt < 2)
+      delay(5);
   }
-  ESP_LOGW(TAG, "read_register 0x%02X : pas de reponse apres 3 tentatives", reg);
+
+  ESP_LOGW(TAG,
+           "read_register 0x%02X : pas de reponse apres 3 tentatives",
+           reg);
 
   return {};
 }
+
 
 // ══ write_register ════════════════════════════════════════════════
 
