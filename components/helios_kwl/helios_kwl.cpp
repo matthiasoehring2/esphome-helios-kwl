@@ -54,7 +54,7 @@ void HeliosKwlComponent::setup() {
 
   s2_count_ = 0;
   s2_tasks_[s2_count_++] = {REG_FAN_SPEED,      POLL_INTERVAL_S2, 0};
-  //s2_tasks_[s2_count_++] = {REG_STATES,          POLL_INTERVAL_S2, 0};
+  s2_tasks_[s2_count_++] = {REG_STATES,          POLL_INTERVAL_S2, 0};
   //s2_tasks_[s2_count_++] = {REG_IO_PORT,         POLL_INTERVAL_S2, 0};
   s2_tasks_[s2_count_++] = {REG_BOOST_STATE,     POLL_INTERVAL_S2, 0};
   s2_tasks_[s2_count_++] = {REG_BOOST_REMAINING, POLL_INTERVAL_S2, 0};
