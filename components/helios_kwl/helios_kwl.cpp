@@ -220,7 +220,9 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
          reg,
          millis() - last_rx_time_);
 
+
     ESP_LOGD(TAG, "PRE SEND avail=%d", available());
+    
     write_array(req, 6);
     flush();
     
@@ -231,11 +233,9 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
       read_byte(&b);
       ESP_LOGD(TAG, "EARLY %02X", b);
     }
-
     
     ESP_LOGD(TAG, "RAW START");
-
-
+    
     uint8_t raw[64];
     int len = 0;
     
@@ -252,13 +252,13 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
     
       yield();
     }
-
     
-    ESP_LOGD(TAG, "RAW LEN=%d", raw_len);
+    ESP_LOGD(TAG, "RAW LEN=%d", len);
     
-    for (int i = 0; i < raw_len; i++) {
-        ESP_LOGD(TAG, "[%02d] %02X", i, raw[i]);
+    for (int i = 0; i < len; i++) {
+      ESP_LOGD(TAG, "[%02d] %02X", i, raw[i]);
     }
+
 
 
 
