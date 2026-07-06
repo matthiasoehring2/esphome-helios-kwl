@@ -182,6 +182,16 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
       if (available()) { read_byte(&buf[got]); got++; last_rx_time_ = millis(); }
       else yield();
     }
+    //debug Co-Pilot
+    ESP_LOGD(TAG, "got=%u", got);
+    
+    if (got == 6) {
+      ESP_LOGD(TAG,
+               "RX %02X %02X %02X %02X %02X %02X",
+               buf[0], buf[1], buf[2],
+               buf[3], buf[4], buf[5]);
+    }
+    //debug Co-Pilot End
     if (got == 6 && verify_checksum(buf, 6) && buf[1] == HELIOS_MAINBOARD && buf[2] == address_ && buf[3] == reg) {
       last_value_[reg] = buf[4];
       has_value_[reg] = true;
@@ -190,16 +200,7 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
     if (attempt < 2) delay(5);
   }
   ESP_LOGW(TAG, "read_register 0x%02X : pas de reponse apres 3 tentatives", reg);
-  //debug Co-Pilot
-  ESP_LOGD(TAG, "got=%u", got);
-  
-  if (got == 6) {
-    ESP_LOGD(TAG,
-             "RX %02X %02X %02X %02X %02X %02X",
-             buf[0], buf[1], buf[2],
-             buf[3], buf[4], buf[5]);
-  }
-  //debug Co-Pilot End
+
   return {};
 }
 
