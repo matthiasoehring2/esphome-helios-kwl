@@ -194,6 +194,10 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
     write_array(req, 6);
     flush();
 
+    ESP_LOGD(TAG, "TX done reg=%02X", reg);
+
+    delay(3);
+
     uint32_t deadline = millis() + 80;
 
     while (millis() < deadline) {
