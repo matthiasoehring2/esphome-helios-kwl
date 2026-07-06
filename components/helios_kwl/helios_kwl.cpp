@@ -268,7 +268,13 @@ HeliosKwlComponent::read_register(uint8_t reg)
                      frame.reg,
                      frame.value);
 
-          
+ 
+            ESP_LOGD(TAG,
+                     "CHECK ts=%u request=%u reg=%02X",
+                     frame.timestamp,
+                     request_time,
+                     frame.reg);
+         
             //if (frame.timestamp < request_time)
             //    continue;
 
