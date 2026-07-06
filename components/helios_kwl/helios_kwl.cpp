@@ -214,12 +214,6 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
     };
     req[5] = checksum(req, 5);
 
-    //Ich würde jetzt in read_register() vor jedem Sendeversuch den UART-Empfangspuffer leeren:
-    while (available()) {
-      uint8_t dummy;
-      read_byte(&dummy);
-    }
-
     ESP_LOGD(TAG,
          "Sending request reg=%02X after %u ms silence",
          reg,
@@ -232,6 +226,7 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
     ESP_LOGD(TAG, "TX done reg=%02X", reg);
 
     delay(20);
+    
     ESP_LOGD(TAG, "20ms later available=%u", available());
 
     uint32_t deadline = millis() + 200;
@@ -247,6 +242,10 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
       }
 
       read_byte(&b);
+
+      
+      ESP_LOGD(TAG, "FIRST BYTE %02X", b);
+
 
       if (b != HELIOS_START_BYTE)
         continue;
