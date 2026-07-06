@@ -227,9 +227,9 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
     
     ESP_LOGD(TAG, "RAW START");
     
-    uint32_t deadline = millis() + 50;
+    uint32_t raw_deadline = millis() + 50;
     
-    while (millis() < deadline) {
+    while (millis() < raw_deadline) {
       while (available()) {
         uint8_t b;
         read_byte(&b);
