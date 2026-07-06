@@ -221,7 +221,18 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
 
     write_array(req, 6);
     flush();
-    //ESP_LOGD(TAG, "after TX available=%u", available());
+    ESP_LOGD(TAG, "after flush available=%u", available());
+
+    
+    delay(1);
+    ESP_LOGD(TAG, "after 1ms available=%u", available());
+    
+    delay(1);
+    ESP_LOGD(TAG, "after 2ms available=%u", available());
+    
+    delay(1);
+    ESP_LOGD(TAG, "after 3ms available=%u", available());
+
     
     int n = available();
     
