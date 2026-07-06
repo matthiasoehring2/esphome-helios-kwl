@@ -202,7 +202,7 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
       read_byte(&dummy);
     }
     rx_buffer_len_ = 0;
-    delay(10);
+    //delay(10);
 
     // Request senden
     uint8_t req[6] = {
