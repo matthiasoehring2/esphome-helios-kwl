@@ -258,12 +258,12 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
       yield();
     }
     ESP_LOGD(TAG, "RAW LEN=%d", len);
-    */
+
     
     for (int i = 0; i < len; i++) {
       ESP_LOGD(TAG, "[%02d] %02X", i, raw[i]);
     }
-
+    */
 
 
 
@@ -342,6 +342,11 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
          buf[1], buf[2], buf[3], buf[4]);
       
       // Nur Antworten vom Mainboard
+
+      ESP_LOGD(TAG,
+         "EXPECT dst=%02X reg=%02X",
+         address_,
+         reg);
 
       if (buf[1] != HELIOS_MAINBOARD) {
         ESP_LOGD(TAG, "ignore: src=%02X", buf[1]);
