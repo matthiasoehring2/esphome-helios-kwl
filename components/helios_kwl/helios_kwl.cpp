@@ -191,6 +191,12 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
     };
     req[5] = checksum(req, 5);
 
+    //Ich würde jetzt in read_register() vor jedem Sendeversuch den UART-Empfangspuffer leeren:
+    while (available()) {
+      uint8_t dummy;
+      read_byte(&dummy);
+    }
+
     write_array(req, 6);
     flush();
 
