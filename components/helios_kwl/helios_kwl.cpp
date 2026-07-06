@@ -226,20 +226,30 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
     
     
     ESP_LOGD(TAG, "RAW START");
-    
+
+    uint8_t raw[32];
+    int raw_len = 0;
+
     uint32_t raw_deadline = millis() + 50;
     
     while (millis() < raw_deadline) {
-      while (available()) {
-        uint8_t b;
-        read_byte(&b);
+
+        while (available()) {
+            uint8_t b;
+            read_byte(&b);
     
-        ESP_LOGD(TAG, "RAW %02X", b);
-      }
-      yield();
+            if (raw_len < sizeof(raw))
+                raw[raw_len++] = b;
+        }
+        yield();
     }
     
-    return {};
+    ESP_LOGD(TAG, "RAW LEN=%d", raw_len);
+    
+    for (int i = 0; i < raw_len; i++) {
+        ESP_LOGD(TAG, "[%02d] %02X", i, raw[i]);
+    }
+
 
 
     delay(1);
