@@ -21,7 +21,8 @@ static constexpr uint8_t HELIOS_MAINBOARD     = 0x11;
 static constexpr uint8_t HELIOS_BROADCAST_ALL = 0x10;
 static constexpr uint8_t HELIOS_BROADCAST_RC  = 0x20;
 static constexpr uint8_t HELIOS_PACKET_LEN    = 6;
-static constexpr uint8_t HELIOS_ADDR_DEFAULT  = 0x2F;
+//static constexpr uint8_t HELIOS_ADDR_DEFAULT  = 0x2F;
+static constexpr uint8_t HELIOS_ADDR_DEFAULT  = 0x21;
 
 static constexpr uint8_t REG_CO2_HIGH = 0x2B, REG_CO2_LOW = 0x2C;
 static constexpr uint8_t REG_TEMP_OUTSIDE = 0x32, REG_TEMP_EXHAUST = 0x33;
