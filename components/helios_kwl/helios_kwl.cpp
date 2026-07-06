@@ -58,9 +58,9 @@ void HeliosKwlComponent::setup() {
   s2_tasks_[s2_count_++] = {REG_IO_PORT,         POLL_INTERVAL_S2, 0};
   s2_tasks_[s2_count_++] = {REG_BOOST_STATE,     POLL_INTERVAL_S2, 0};
   s2_tasks_[s2_count_++] = {REG_BOOST_REMAINING, POLL_INTERVAL_S2, 0};
-  s2_tasks_[s2_count_++] = {REG_ALARMS,          POLL_INTERVAL_S2, 0};
-  s2_tasks_[s2_count_++] = {REG_HUMIDITY1,       POLL_INTERVAL_S2, 0};
-  s2_tasks_[s2_count_++] = {REG_HUMIDITY2,       POLL_INTERVAL_S2, 0};
+  //s2_tasks_[s2_count_++] = {REG_ALARMS,          POLL_INTERVAL_S2, 0};
+  //s2_tasks_[s2_count_++] = {REG_HUMIDITY1,       POLL_INTERVAL_S2, 0};
+  //s2_tasks_[s2_count_++] = {REG_HUMIDITY2,       POLL_INTERVAL_S2, 0};
 
   s3_count_ = 0;
   s3_tasks_[s3_count_++] = {REG_CO2_SENSORS,     POLL_INTERVAL_S3, 0};
@@ -68,7 +68,7 @@ void HeliosKwlComponent::setup() {
   s3_tasks_[s3_count_++] = {REG_POST_HEAT_ON,    POLL_INTERVAL_S3, 0};
   s3_tasks_[s3_count_++] = {REG_POST_HEAT_OFF,   POLL_INTERVAL_S3, 0};
   s3_tasks_[s3_count_++] = {REG_FLAGS_SYSTEM,    POLL_INTERVAL_S3, 0};
-  s3_tasks_[s3_count_++] = {REG_FLAGS_MODE,      POLL_INTERVAL_S3, 0};
+  //s3_tasks_[s3_count_++] = {REG_FLAGS_MODE,      POLL_INTERVAL_S3, 0};
   s3_tasks_[s3_count_++] = {REG_SERVICE_MONTHS,  POLL_INTERVAL_S3, 0};
   s3_tasks_[s3_count_++] = {REG_PROGRAM_VARS,    POLL_INTERVAL_S3, 0};
   s3_tasks_[s3_count_++] = {REG_BASIC_SPEED,     POLL_INTERVAL_S3, 0};
@@ -241,7 +241,7 @@ HeliosKwlComponent::read_register(uint8_t reg)
   
     uint32_t request_time = millis();
     
-    uint32_t deadline = millis() + 6000;
+    uint32_t deadline = millis() + 600;
 
     ESP_LOGD(TAG,
              "EXPECT reg=%02X",
