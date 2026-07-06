@@ -221,7 +221,19 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
 
     write_array(req, 6);
     flush();
-    ESP_LOGD(TAG, "after TX available=%u", available());
+    //ESP_LOGD(TAG, "after TX available=%u", available());
+    
+    int n = available();
+    
+    ESP_LOGD(TAG, "RAW COUNT=%d", n);
+    
+    for (int i = 0; i < n; i++) {
+        uint8_t b;
+        read_byte(&b);
+        ESP_LOGD(TAG, "RAW[%d]=%02X", i, b);
+    }
+    return ()
+
 
     ESP_LOGD(TAG, "TX done reg=%02X", reg);
 
