@@ -45,6 +45,19 @@ static const char *fault_code_description(uint8_t code) {
   }
 }
 
+
+struct HeliosFrame {
+  uint8_t src;
+  uint8_t dst;
+  uint8_t reg;
+  uint8_t value;
+  uint32_t timestamp;
+};
+
+std::array<HeliosFrame, 32> frame_queue_;
+size_t frame_head_ = 0;
+size_t frame_tail_ = 0;
+
 // ══ setup ══════════════════════════════════════════════════════════
 
 void HeliosKwlComponent::setup() {
@@ -135,8 +148,23 @@ bool HeliosKwlComponent::process_one_packet() {
     rx_buffer_len_--;
     return true;
   }
+  /*
   uint8_t src = rx_buffer_[1], dst = rx_buffer_[2], reg = rx_buffer_[3], val = rx_buffer_[4];
   dispatch_packet(src, dst, reg, val);
+  */
+  //new start
+  HeliosFrame f;
+  
+  f.src = src;
+  f.dst = dst;
+  f.reg = reg;
+  f.value = val;
+  f.timestamp = millis();
+  
+  push_frame(f);
+  
+  dispatch_packet(src, dst, reg, val);
+  //new end
   std::copy(rx_buffer_.begin()+HELIOS_PACKET_LEN, rx_buffer_.begin()+rx_buffer_len_, rx_buffer_.begin());
   rx_buffer_len_ -= HELIOS_PACKET_LEN;
   return true;
@@ -151,6 +179,18 @@ void HeliosKwlComponent::dispatch_packet(uint8_t src, uint8_t dst, uint8_t reg, 
   has_value_[reg] = true;
   publish_register(reg, val);
 }
+
+
+void HeliosKwlComponent::push_frame(const HeliosFrame &f)
+{
+    frame_queue_[frame_tail_] = f;
+    frame_tail_ = (frame_tail_ + 1) % frame_queue_.size();
+
+    if (frame_tail_ == frame_head_) {
+        frame_head_ = (frame_head_ + 1) % frame_queue_.size();
+    }
+}
+
 
 // ══ Silence bus ═══════════════════════════════════════════════════
 
@@ -174,15 +214,76 @@ void HeliosKwlComponent::wait_bus_silence() {
   }
 }
 
+
+
+// send_request
+
+void HeliosKwlComponent::send_read_request(uint8_t reg)
+{
+    wait_bus_silence();
+
+    uint8_t req[6] = {
+        HELIOS_START_BYTE,
+        address_,
+        HELIOS_MAINBOARD,
+        0x00,
+        reg,
+        0
+    };
+
+    req[5] = checksum(req, 5);
+
+    write_array(req, 6);
+    flush();
+}
+
+
 // ══ read_register ═════════════════════════════════════════════════
-
-
 struct ReadGuard {
   bool &flag;
   ReadGuard(bool &f) : flag(f) { flag = true; }
   ~ReadGuard() { flag = false; }
 };
 
+
+optional<uint8_t>
+HeliosKwlComponent::read_register(uint8_t reg)
+{
+    send_read_request(reg);
+
+    uint32_t deadline = millis() + 200;
+
+    while (millis() < deadline)
+    {
+        while (frame_head_ != frame_tail_)
+        {
+            auto frame = frame_queue_[frame_head_];
+
+            frame_head_ =
+                (frame_head_ + 1) %
+                frame_queue_.size();
+
+            if (frame.src != HELIOS_MAINBOARD)
+                continue;
+
+            if (frame.dst != address_)
+                continue;
+
+            if (frame.reg != reg)
+                continue;
+
+            last_value_[reg] = frame.value;
+            has_value_[reg] = true;
+
+            return frame.value;
+        }
+
+        yield();
+    }
+
+    return {};
+}
+/*
 optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
   ReadGuard guard(read_in_progress_);
   for (int attempt = 0; attempt < 3; attempt++) {
@@ -230,42 +331,6 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
 
     write_array(req, 6);
     flush();
-    /*
-    delay(5);
-    
-    while (available()) {
-      uint8_t b;
-      read_byte(&b);
-      ESP_LOGD(TAG, "EARLY %02X", b);
-    }
-    
-    ESP_LOGD(TAG, "RAW START");
-    
-    uint8_t raw[64];
-    int len = 0;
-    
-    uint32_t end = millis() + 100;
-    
-    while (millis() < end) {
-      while (available()) {
-        uint8_t b;
-        read_byte(&b);
-    
-        if (len < sizeof(raw))
-          raw[len++] = b;
-      }
-    
-      yield();
-    }
-    ESP_LOGD(TAG, "RAW LEN=%d", len);
-
-    
-    for (int i = 0; i < len; i++) {
-      ESP_LOGD(TAG, "[%02d] %02X", i, raw[i]);
-    }
-    */
-
-
 
     delay(1);
     ESP_LOGD(TAG, "after flush wiht 1ms delay available=%u", available());
@@ -391,7 +456,7 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
            reg);
   return {};
 }
-
+*/
 
 // ══ write_register ════════════════════════════════════════════════
 
