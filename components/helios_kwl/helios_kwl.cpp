@@ -96,11 +96,7 @@ void HeliosKwlComponent::setup() {
 // ══ loop + dispatch ═══════════════════════════════════════════════
 
 void HeliosKwlComponent::loop() {
-  
-  if (read_in_progress_)
-    return;
-
-  loop_read_bus();
+    loop_read_bus();
 }
 
 void HeliosKwlComponent::loop_read_bus() {
@@ -136,10 +132,7 @@ bool HeliosKwlComponent::process_one_packet() {
     rx_buffer_len_--;
     return true;
   }
-  /*
   uint8_t src = rx_buffer_[1], dst = rx_buffer_[2], reg = rx_buffer_[3], val = rx_buffer_[4];
-  dispatch_packet(src, dst, reg, val);
-  */
   //new start
   HeliosFrame f;
   
@@ -150,9 +143,9 @@ bool HeliosKwlComponent::process_one_packet() {
   f.timestamp = millis();
   
   push_frame(f);
+  //new end
   
   dispatch_packet(src, dst, reg, val);
-  //new end
   std::copy(rx_buffer_.begin()+HELIOS_PACKET_LEN, rx_buffer_.begin()+rx_buffer_len_, rx_buffer_.begin());
   rx_buffer_len_ -= HELIOS_PACKET_LEN;
   return true;
@@ -191,6 +184,12 @@ void HeliosKwlComponent::wait_bus_silence() {
       if (rx_buffer_len_ < RX_BUFFER_SIZE) rx_buffer_[rx_buffer_len_++] = b;
       last_rx_time_ = millis();
     }
+    
+    while (rx_buffer_len_ >= HELIOS_PACKET_LEN) {
+        if (!process_one_packet())
+            break;
+    }
+
     if ((millis() - last_rx_time_) >= BUS_SILENCE_MS) 
     {
       ESP_LOGD(TAG,
@@ -227,22 +226,22 @@ void HeliosKwlComponent::send_read_request(uint8_t reg)
 
 
 // ══ read_register ═════════════════════════════════════════════════
-struct ReadGuard {
-  bool &flag;
-  ReadGuard(bool &f) : flag(f) { flag = true; }
-  ~ReadGuard() { flag = false; }
-};
-
 
 optional<uint8_t>
 HeliosKwlComponent::read_register(uint8_t reg)
 {
+    
     send_read_request(reg);
-
+  
+    uint32_t request_time = millis();
+    
     uint32_t deadline = millis() + 200;
 
     while (millis() < deadline)
     {
+        // UART lesen und Queue füllen
+        loop_read_bus();
+        
         while (frame_head_ != frame_tail_)
         {
             auto frame = frame_queue_[frame_head_];
@@ -250,6 +249,18 @@ HeliosKwlComponent::read_register(uint8_t reg)
             frame_head_ =
                 (frame_head_ + 1) %
                 frame_queue_.size();
+
+          
+            ESP_LOGD(TAG,
+                     "QUEUE src=%02X dst=%02X reg=%02X val=%02X",
+                     frame.src,
+                     frame.dst,
+                     frame.reg,
+                     frame.value);
+
+          
+            if (frame.timestamp < request_time)
+                continue;
 
             if (frame.src != HELIOS_MAINBOARD)
                 continue;
@@ -260,6 +271,14 @@ HeliosKwlComponent::read_register(uint8_t reg)
             if (frame.reg != reg)
                 continue;
 
+            
+            ESP_LOGD(TAG,
+                     "MATCH src=%02X dst=%02X reg=%02X val=%02X",
+                     frame.src,
+                     frame.dst,
+                     frame.reg,
+                     frame.value);
+
             last_value_[reg] = frame.value;
             has_value_[reg] = true;
 
@@ -269,182 +288,13 @@ HeliosKwlComponent::read_register(uint8_t reg)
         yield();
     }
 
+    ESP_LOGW(TAG,
+             "read_register 0x%02X timeout",
+             reg);
+
     return {};
 }
-/*
-optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
-  ReadGuard guard(read_in_progress_);
-  for (int attempt = 0; attempt < 3; attempt++) {
 
-    
-    ESP_LOGD(TAG,
-             "READ reg=%02X attempt=%d",
-             reg,
-             attempt + 1);
-
-    // Bus frei?
-    wait_bus_silence();
-
-    // RX-Puffer leeren
-    while (available()) {
-      uint8_t dummy;
-      read_byte(&dummy);
-    }
-    rx_buffer_len_ = 0;
-    //delay(10);
-
-    // Request senden
-    uint8_t req[6] = {
-      HELIOS_START_BYTE,
-      address_,
-      HELIOS_MAINBOARD,
-      0x00,
-      reg,
-      0
-    };
-    req[5] = checksum(req, 5);
-
-    ESP_LOGD(TAG,
-         "Sending request reg=%02X after %u ms silence",
-         reg,
-         millis() - last_rx_time_);
-
-
-    ESP_LOGD(TAG, "PRE SEND avail=%d", available());
-    
-    ESP_LOGD(TAG,
-        "TX %02X %02X %02X %02X %02X %02X",
-        req[0], req[1], req[2],
-        req[3], req[4], req[5]);
-
-    write_array(req, 6);
-    flush();
-
-    delay(1);
-    ESP_LOGD(TAG, "after flush wiht 1ms delay available=%u", available());
-    ESP_LOGD(TAG, "TX done reg=%02X", reg);
-
-    uint32_t deadline = millis() + 200;
-
-    while (millis() < deadline) {
-
-      // Auf Startbyte synchronisieren
-      uint8_t b;
-
-      if (!available()) {
-        yield();
-        continue;
-      }
-      
-      ESP_LOGD(TAG, "UART avail=%u", available());
-
-      read_byte(&b);
-      
-      if (b != HELIOS_START_BYTE) {
-        ESP_LOGD(TAG, "SYNC DROP %02X", b);
-        continue;
-      } 
-      ESP_LOGD(TAG, "FOUND SOF %02X", b);
-      ESP_LOGD(TAG, "SOF detected, avail=%u", available());
-
-      uint8_t buf[6];
-      buf[0] = b;
-
-      bool complete = true;
-
-      // Rest des Frames lesen
-      for (int i = 1; i < 6; i++) {
-        uint32_t byte_deadline = millis() + 30;
-
-        while (!available() && millis() < byte_deadline)
-          yield();
-
-        if (!available()) {          
-          ESP_LOGD(TAG,
-           "Frame timeout byte=%d partial=%02X %02X %02X %02X %02X %02X",
-           i,
-           buf[0],
-           i > 1 ? buf[1] : 0,
-           i > 2 ? buf[2] : 0,
-           i > 3 ? buf[3] : 0,
-           i > 4 ? buf[4] : 0,
-           i > 5 ? buf[5] : 0);
-
-          complete = false;
-          break;
-        }
-
-        read_byte(&buf[i]);
-        ESP_LOGD(TAG, "FRAME[%d]=%02X", i, buf[i]);
-      }
-
-      if (!complete) {
-        ESP_LOGD(TAG, "Incomplete frame");
-        continue;
-      } 
-
-      ESP_LOGD(TAG,
-               "RX %02X %02X %02X %02X %02X %02X",
-               buf[0], buf[1], buf[2],
-               buf[3], buf[4], buf[5]);
-
-      // Prüfsumme
-      if (!verify_checksum(buf, 6)) {
-        ESP_LOGD(TAG, "BAD CRC");
-        continue;
-      }
-
-      ESP_LOGD(TAG,
-         "FRAME src=%02X dst=%02X reg=%02X val=%02X",
-         buf[1], buf[2], buf[3], buf[4]);
-      
-      // Nur Antworten vom Mainboard
-
-      ESP_LOGD(TAG,
-         "EXPECT dst=%02X reg=%02X",
-         address_,
-         reg);
-
-      if (buf[1] != HELIOS_MAINBOARD) {
-        ESP_LOGD(TAG, "ignore: src=%02X", buf[1]);
-        continue;
-      }
-      // Fremde Adressen ignorieren
-      if (buf[2] != address_) {
-        ESP_LOGD(TAG,
-                 "ignore: wrong dst=%02X expected=%02X",
-                 buf[2], address_);
-        continue;
-      }
-
-      // Falsches Register ignorieren
-      if (buf[3] != reg) {
-        ESP_LOGD(TAG,
-                 "ignore: wrong reg=%02X expected=%02X",
-                 buf[3], reg);
-        continue;
-      }
-      
-      // Treffer
-      last_value_[reg] = buf[4];
-      has_value_[reg] = true;
-
-      ESP_LOGD(TAG, "MATCH reg=%02X value=%02X",
-         buf[3], buf[4]);
-
-      return buf[4];
-    }
-
-    if (attempt < 2)
-      delay(5);
-  }
-
-  ESP_LOGW(TAG,
-           "read_register 0x%02X : pas de reponse apres 3 tentatives",
-           reg);
-  return {};
-}
-*/
 
 // ══ write_register ════════════════════════════════════════════════
 
