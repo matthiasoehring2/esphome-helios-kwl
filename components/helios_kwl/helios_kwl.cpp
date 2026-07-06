@@ -230,7 +230,7 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
 
     write_array(req, 6);
     flush();
-    
+    /*
     delay(5);
     
     while (available()) {
@@ -257,8 +257,8 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
     
       yield();
     }
-    
     ESP_LOGD(TAG, "RAW LEN=%d", len);
+    */
     
     for (int i = 0; i < len; i++) {
       ESP_LOGD(TAG, "[%02d] %02X", i, raw[i]);
