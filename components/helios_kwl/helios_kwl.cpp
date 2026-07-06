@@ -46,18 +46,6 @@ static const char *fault_code_description(uint8_t code) {
 }
 
 
-struct HeliosFrame {
-  uint8_t src;
-  uint8_t dst;
-  uint8_t reg;
-  uint8_t value;
-  uint32_t timestamp;
-};
-
-std::array<HeliosFrame, 32> frame_queue_;
-size_t frame_head_ = 0;
-size_t frame_tail_ = 0;
-
 // ══ setup ══════════════════════════════════════════════════════════
 
 void HeliosKwlComponent::setup() {
