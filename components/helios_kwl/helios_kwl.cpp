@@ -64,7 +64,7 @@ void HeliosKwlComponent::setup() {
 
   s3_count_ = 0;
   s3_tasks_[s3_count_++] = {REG_CO2_SENSORS,     POLL_INTERVAL_S3, 0};
-  s3_tasks_[s3_count_++] = {REG_FAULT_CODE,      POLL_INTERVAL_S3, 0};
+  //s3_tasks_[s3_count_++] = {REG_FAULT_CODE,      POLL_INTERVAL_S3, 0};
   s3_tasks_[s3_count_++] = {REG_POST_HEAT_ON,    POLL_INTERVAL_S3, 0};
   s3_tasks_[s3_count_++] = {REG_POST_HEAT_OFF,   POLL_INTERVAL_S3, 0};
   s3_tasks_[s3_count_++] = {REG_FLAGS_SYSTEM,    POLL_INTERVAL_S3, 0};
@@ -281,8 +281,8 @@ HeliosKwlComponent::read_register(uint8_t reg)
             if (frame.src != HELIOS_MAINBOARD)
                 continue;
 
-            //if (frame.dst != address_)
-            //    continue;
+            if (frame.dst != address_)
+                continue;
 
             if (frame.reg != reg)
             {
