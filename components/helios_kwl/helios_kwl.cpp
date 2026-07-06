@@ -234,7 +234,7 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
     delay(1);
     ESP_LOGD(TAG, "after 3ms available=%u", available());
 
-    
+    /*
     int n = available();
     
     ESP_LOGD(TAG, "RAW COUNT=%d", n);
@@ -244,8 +244,8 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
         read_byte(&b);
         ESP_LOGD(TAG, "RAW[%d]=%02X", i, b);
     }
-    //return {};
-
+    return {};
+    */
 
     ESP_LOGD(TAG, "TX done reg=%02X", reg);
 
