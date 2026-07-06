@@ -232,7 +232,7 @@ optional<uint8_t> HeliosKwlComponent::read_register(uint8_t reg) {
         read_byte(&b);
         ESP_LOGD(TAG, "RAW[%d]=%02X", i, b);
     }
-    return ()
+    return {};
 
 
     ESP_LOGD(TAG, "TX done reg=%02X", reg);
